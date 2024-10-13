@@ -1,6 +1,6 @@
-xrc ([commander] x16 raster convetor)
+xrc ([commander] x16 raster convertor)
 
-Reads an indexed png file and convert it to commander x16 format (VERA).
+Read an indexed png file and convert it to commander x16 format (VERA).
 Can also create commander x16 tilemap from *basic* filed *.tmx files
 
 
@@ -38,6 +38,6 @@ Create a color pallete:
 Create a tileset:
 	xrc -q -s -i tileset.png -sw 16 -sh 16 -o tileset.bin
 
-Create asprite:
+Create a sprite:
 	xrc -q -s -i sprite.png -sw 16 -sh 16 -o sprite.bin
 
