@@ -11,7 +11,8 @@
 //    -h show help
 //    -i input file (png)
 //    -o output file name
-//    -p create a palete 
+//    -p create a palette 
+//    -P create a palette from a GIMP text file.
 //    -q quiet mode (no messages)
 //    -s create a sprite (i.e. input image is tiled)
 //    -t create a tilemap from tiled .tmx file
@@ -40,6 +41,7 @@ int create_acme;
 int create_bin;
 int create_ca65;
 int create_palette;
+int create_gimp_palette;
 int create_sprite;
 int create_tilemap;
 int quiet_mode;
@@ -50,6 +52,7 @@ png_uint_32 sprite_width;
 
 void write_bin(FILE *fp);
 void write_palette(FILE *fp);
+void write_gimp_palette(FILE *fp);
 void write_tilemap_bin(FILE *fp);
 void write_1bpp_bin(FILE *fp);
 void write_2bpp_bin(FILE *fp);
@@ -112,6 +115,16 @@ int main(int argc, char *argv[])
                 write_palette(fp);
                 fclose(fp);
         }
+		
+		if (create_gimp_palette == 1) {
+                FILE *fp = fopen(output_file, "w");
+                if (add_header_bytes == 1) {
+                        uint16_t  z = 0;
+                        fwrite(&z, 1, sizeof(uint16_t), fp);
+                }
+                write_gimp_palette(fp);
+                fclose(fp);
+        }
 
         //FIXME check if the below is needed
         //png_destroy_info_struct(&info_ptr, NULL, NULL);
@@ -171,6 +184,28 @@ void write_palette(FILE *fp)
                         fwrite(&bg, 1, sizeof(uint8_t), fp);
                         fwrite(&r, 1, sizeof(uint8_t), fp);
         }
+}
+
+void write_gimp_palette(FILE *fp)
+{
+        FILE* file = fopen(input_file, "r"); /* should check the result */
+        char line[256];
+		while (fgets(line, sizeof(line), file))
+        {
+			long test = strtol(&line[1], &line[7] , 16);
+			int red = ((int)test >> 16) & 0x000000ff;
+			int green = ((int)test >> 8) & 0x000000ff;
+			int blue = (int)test & 0x000000ff;
+			//printf(" %s, %d, %d, %d, %d\n", line,(int)test, red, green, blue);
+			uint8_t r = (uint8_t)(red/16);
+			uint8_t g = (uint8_t)(green/16);
+			uint8_t b = (uint8_t)(blue/16);
+			uint8_t bg = g | b;
+			fwrite(&bg, 1, sizeof(uint8_t), fp);
+            fwrite(&r, 1,  sizeof(uint8_t), fp);
+        };
+
+        fclose(file);
 }
 
 void write_tilemap_bin(FILE *fp)
@@ -248,7 +283,7 @@ void write_4bpp_bin(FILE *fp)
         png_uint_32 w = input_image_width;
         if (create_sprite == 1) {
                 sw = input_image_width / sprite_width;
-                sh = input_image_width / sprite_height;
+                sh = input_image_height / sprite_height;
                 h = sprite_height;
                 w = sprite_width;
         }
@@ -324,6 +359,7 @@ void set_defaults()
         create_ca65 = 0;
         create_bin =  0;
         create_palette =  0;
+		create_gimp_palette =  0;
         create_tilemap =  0;
         add_header_bytes = 0;
         bpp = 4;
@@ -367,6 +403,7 @@ void show_usage()
         puts("    -i input file (png)");
         puts("    -o output file name");
         puts("    -p create a palette");
+		puts("    -P create a palette using a GIMP palette(txt)");
         puts("    -q quiet mode");
         puts("    -t create a tilemap from tiled *.tmx file");
         puts("    -1 1bpp");
@@ -406,6 +443,7 @@ void parse_args(int argc, char *argv[])
                         i++;
                 }
                 if (strcmp(argv[i],"-p") == 0) create_palette = 1;
+				if (strcmp(argv[i],"-P") == 0) create_gimp_palette = 1;
                 if (strcmp(argv[i],"-q") == 0) quiet_mode = 1;
                 if (strcmp(argv[i],"-s") == 0) create_sprite = 1;
                 if (strcmp(argv[i],"-t") == 0) create_tilemap = 1;
