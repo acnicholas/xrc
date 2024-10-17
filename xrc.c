@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 {
         set_defaults();
         parse_args(argc, argv);
-        if (create_tilemap == 0) {
+        if (create_tilemap == 0 && create_gimp_palette == 0) {
                 read_png();
                 input_image_width = png_get_image_width(png_ptr, info_ptr);
                 input_image_height = png_get_image_height(png_ptr, info_ptr);
@@ -193,12 +193,12 @@ void write_gimp_palette(FILE *fp)
 		while (fgets(line, sizeof(line), file))
         {
 			long test = strtol(&line[1], &line[7] , 16);
-			int red = ((int)test >> 16) & 0x000000ff;
-			int green = ((int)test >> 8) & 0x000000ff;
-			int blue = (int)test & 0x000000ff;
+			uint32_t red = ((uint32_t)test >> 16) & 0x000000ff;
+			uint32_t green = ((uint32_t)test >> 8) & 0x000000ff;
+			uint32_t blue = (uint32_t)test & 0x000000ff;
 			//printf(" %s, %d, %d, %d, %d\n", line,(int)test, red, green, blue);
 			uint8_t r = (uint8_t)(red/16);
-			uint8_t g = (uint8_t)(green/16);
+			uint8_t g = ((uint8_t)(green/16)) << 4;
 			uint8_t b = (uint8_t)(blue/16);
 			uint8_t bg = g | b;
 			fwrite(&bg, 1, sizeof(uint8_t), fp);
